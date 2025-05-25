@@ -8,8 +8,8 @@ import os
 import sys
 from transformers import AutoModelForSequenceClassification, AutoTokenizer
 
-# Define the model to use - using a valid, publicly available pre-trained model for fake news detection
-MODEL_NAME = "Pulk17/Fake-News-Detection"
+# Define the model to use - using a lightweight model to stay within Render's memory limits
+MODEL_NAME = "ErfanMoosaviMonazzah/bert-tiny-fake-news-detection"
 SAVE_PATH = "saved_models/fake_news_model"
 
 def main():
