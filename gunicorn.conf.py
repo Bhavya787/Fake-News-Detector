@@ -4,4 +4,4 @@ worker_class = 'sync'
 preload_app = False
 max_requests = 10
 max_requests_jitter = 3
-timeout = 120
+timeout = 3600
