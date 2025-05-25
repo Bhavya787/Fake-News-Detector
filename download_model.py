@@ -9,7 +9,7 @@ import sys
 from transformers import AutoModelForSequenceClassification, AutoTokenizer
 
 # Define the model to use - using a valid, publicly available pre-trained model for fake news detection
-MODEL_NAME = "fajri/bert-base-indonesian-finetuned-fake-news-detection"
+MODEL_NAME = "Pulk17/Fake-News-Detection"
 SAVE_PATH = "saved_models/fake_news_model"
 
 def main():
