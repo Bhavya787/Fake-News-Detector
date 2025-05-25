@@ -1,11 +1,15 @@
 #!/usr/bin/env python3
 """
-Modified main.py for Render deployment
+Modified main.py for Render deployment with memory optimizations
 - Updated paths to work with flattened directory structure
+- Implemented lazy loading for model to reduce memory usage
+- Added model quantization for further memory reduction
 """
 
 import sys
 import os
+import gc
+import threading
 
 # Import Flask and related libraries
 from flask import Flask, render_template, request
@@ -16,11 +20,44 @@ from model.model import FakeNewsDetector
 # Initialize Flask app
 app = Flask(__name__, template_folder="templates", static_folder="static")
 
-# Initialize the detector
-print("Initializing Fake News Detector for Flask app...")
-detector = FakeNewsDetector()
-if not detector.model:
-    print("CRITICAL: Model could not be loaded for the Flask application. Predictions will fail.")
+# Global variables for lazy loading
+detector = None
+detector_lock = threading.Lock()
+
+def get_detector():
+    """
+    Lazy loading function for the detector.
+    Only loads the model when needed and ensures thread safety.
+    """
+    global detector
+    
+    # If detector is already loaded, return it
+    if detector is not None and detector.model is not None:
+        return detector
+        
+    # Thread-safe loading of the model
+    with detector_lock:
+        # Double-check in case another thread loaded it while we were waiting
+        if detector is not None and detector.model is not None:
+            return detector
+            
+        print("Lazy loading Fake News Detector model...")
+        detector = FakeNewsDetector()
+        
+        # Apply quantization to reduce memory usage
+        if detector.model is not None:
+            try:
+                import torch
+                # Convert model to float16 for memory reduction
+                detector.model = detector.model.half()  # Convert to float16
+                print("Model quantized to float16 to reduce memory usage")
+            except Exception as e:
+                print(f"Warning: Could not quantize model: {e}")
+                
+        if not detector.model:
+            print("CRITICAL: Model could not be loaded. Predictions will fail.")
+            
+        return detector
 
 @app.route("/", methods=["GET", "POST"])
 def home():
@@ -38,12 +75,20 @@ def home():
         
         if not text_input:
             result = {"label": "Error", "confidence": 0.0, "error": "Please enter some text to analyze."}
-        elif not detector.model:
-            result = {"label": "Error", "confidence": 0.0, "error": "Model is not available. Please check server logs."}
         else:
             try:
-                prediction_label, confidence = detector.predict(text_input)
-                result = {"label": prediction_label, "confidence": confidence}
+                # Lazy load the detector only when needed
+                current_detector = get_detector()
+                
+                if not current_detector.model:
+                    result = {"label": "Error", "confidence": 0.0, "error": "Model is not available. Please check server logs."}
+                else:
+                    prediction_label, confidence = current_detector.predict(text_input)
+                    result = {"label": prediction_label, "confidence": confidence}
+                    
+                    # Force garbage collection after prediction to free memory
+                    gc.collect()
+                    
             except Exception as e:
                 print(f"Error during prediction: {e}")
                 result = {"label": "Error", "confidence": 0.0, "error": f"An error occurred during analysis: {str(e)}"}
