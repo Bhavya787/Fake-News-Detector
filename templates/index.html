@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fake News Detector</title>
+    <link rel="stylesheet" href="{{ url_for("static", filename="style.css") }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Fake News Detector</h1>
+        <p>Paste the news text below to check for potential misinformation.</p>
+        <form method="POST">
+            <textarea name="text_input" rows="10" placeholder="Enter news article text here..."></textarea>
+            <button type="submit">Analyze</button>
+        </form>
+
+        {% if result %}
+        <div class="results">
+            <h2>Analysis Result:</h2>
+            <p><strong>Prediction:</strong> <span class="prediction-{{ result.label.lower().replace(" ", "-").replace("(", "").replace(")", "") }}">{{ result.label }}</span></p>
+            <p><strong>Confidence:</strong> {{ "%.2f"|format(result.confidence * 100) }}%</p>
+            {% if result.error %}
+                <p class="error-message">Error: {{ result.error }}</p>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        {% if submitted_text %}
+        <div class="submitted-text">
+            <h3>Submitted Text:</h3>
+            <pre>{{ submitted_text }}</pre>
+        </div>
+        {% endif %}
+
+        <div class="model-info">
+            <p>Note: The current underlying model is a general-purpose text classifier (e.g., sentiment analysis) for demonstration. For actual fake news detection, replace it with a model fine-tuned on a relevant dataset. The labels (e.g., REAL/FAKE) and interpretation will depend on your specific model.</p>
+        </div>        
+    </div>
+    <footer>
+        <p>Fake News Detector Project</p>
+    </footer>
+</body>
+</html>
