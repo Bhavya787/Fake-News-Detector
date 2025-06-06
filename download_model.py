@@ -9,7 +9,7 @@ import sys
 from transformers import AutoModelForSequenceClassification, AutoTokenizer
 
 # Define the model to use - using a lightweight model to stay within Render's memory limits
-MODEL_NAME = "ErfanMoosaviMonazzah/bert-tiny-fake-news-detection"
+MODEL_NAME = "distilbert-base-uncased"
 SAVE_PATH = "saved_models/fake_news_model"
 
 def main():
